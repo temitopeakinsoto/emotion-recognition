@@ -4,12 +4,10 @@ const url = 'http://localhost:3000/emotion'
 
 const App = () => {
   const [emotionData, setEmotionData] = useState([]);
-  const [stream, setStream] = useState(null);
-  const [isStreaming, setIsStreaming] = useState(true); // Added state to track streaming status
+  const [stream, setStream] = useState(null); 
+
 
   useEffect(() => {
-    let intervalId = null; // Variable to hold the interval ID
-
     // Start capturing video frames and sending them to the server
     const captureFramesAndSend = async () => {
       const videoElement = document.getElementById('videoStream');
@@ -39,36 +37,26 @@ const App = () => {
           setEmotionData(data);
 
           // Schedule the next frame capture and send
-          intervalId = requestAnimationFrame(sendFramesToServer);
+          requestAnimationFrame(sendFramesToServer);
         };
 
         // Start sending frames to the server
-        intervalId = requestAnimationFrame(sendFramesToServer);
-        setStream(stream);
+        sendFramesToServer();
       } catch (error) {
         console.error('Error accessing webcam:', error);
       }
     };
 
-    if (isStreaming) {
-      captureFramesAndSend();
-    }
-
-    return () => {
-      // Clear the interval when the component unmounts or when streaming is stopped
-      if (intervalId) {
-        cancelAnimationFrame(intervalId);
-      }
-      if (stream) {
-        const tracks = stream.getTracks();
-        tracks.forEach((track) => track.stop());
-      }
-    };
-  }, [isStreaming]);
+    captureFramesAndSend();
+  }, [stream]);
 
   const handleStopStream = () => {
     // Stop the video stream when the stop button is clicked
-    setIsStreaming(false); // Set isStreaming to false to stop the streaming
+    if (stream) {
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+      setStream(null);
+    }
   };
 
   return (
@@ -87,9 +75,8 @@ const App = () => {
           ))}
         </ul>
       </div>
-      <button onClick={handleStopStream} disabled={!isStreaming}>
-        Stop Streaming
-      </button>
+      <button onClick={handleStopStream}>Stop Streaming</button>
+
     </div>
   );
 };
